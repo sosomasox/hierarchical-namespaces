@@ -39,7 +39,7 @@ HNC_IMG_NAME ?= hnc-manager
 # locally (we rely on the docker-push target, below, to push the image into
 # Kind).
 ifneq ($(CONFIG),kind)
-  HNC_IMG_TAG ?= latest
+  HNC_IMG_TAG ?= v0.9.0
 else
   HNC_IMG_TAG ?= kind-local
 endif
@@ -256,6 +256,7 @@ docker-push-multi: buildx-setup generate fmt vet
 	docker buildx build \
 	--push \
 	--platform linux/arm64 --tag ${HNC_IMG} .
+	docker buildx rm qemu
 
 ###################### KIND ACTIONS #########################
 
