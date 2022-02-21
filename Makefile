@@ -26,6 +26,8 @@ ifdef PROJECT_ID
   HNC_REGISTRY ?= gcr.io/${PROJECT_ID}
 endif
 
+HNC_REGISTRY = "sosomasox"
+
 # The image name is the *base* name - excluding the registry and the tag.
 HNC_IMG_NAME ?= hnc-manager
 
@@ -60,7 +62,7 @@ OS_NAME := $(shell go env GOOS)
 # `make` must be called from the HNC root, or all kinds of things will break
 # (starting with this).
 CURDIR = $(shell pwd)
-KUSTOMIZE ?= ${CURDIR}/hack/kustomize-3.8.1
+KUSTOMIZE ?= ${CURDIR}/hack/kustomize-3.8.6
 
 ifeq ($(OS_NAME),darwin)
 	KUSTOMIZE = $(shell which kustomize)
@@ -96,30 +98,30 @@ test-only:
 # Builds all binaries (manager and kubectl) and manifests
 build: generate fmt vet manifests
 	go build -o bin/manager ./cmd/manager/main.go
-	GOOS=linux GOARCH=amd64 go build \
-	     -o bin/kubectl/kubectl-hns_linux_amd64 \
-	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
-	     ./cmd/kubectl/main.go
-	GOOS=darwin GOARCH=amd64 go build \
-	     -o bin/kubectl/kubectl-hns_darwin_amd64 \
-	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
-	     ./cmd/kubectl/main.go
-	GOOS=darwin GOARCH=arm64 go build \
-	     -o bin/kubectl/kubectl-hns_darwin_arm64 \
-	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
-	     ./cmd/kubectl/main.go
+	#GOOS=linux GOARCH=amd64 go build
+	     #-o bin/kubectl/kubectl-hns_linux_amd64 \
+	     #-ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
+	     #./cmd/kubectl/main.go
+	#GOOS=darwin GOARCH=amd64 go build \
+	     #-o bin/kubectl/kubectl-hns_darwin_amd64 \
+	     #-ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
+	     #./cmd/kubectl/main.go
+	#GOOS=darwin GOARCH=arm64 go build \
+	     #-o bin/kubectl/kubectl-hns_darwin_arm64 \
+	     #-ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
+	     #./cmd/kubectl/main.go
 	GOOS=linux GOARCH=arm64 go build \
 	     -o bin/kubectl/kubectl-hns_linux_arm64 \
 	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
 	     ./cmd/kubectl/main.go
-	GOOS=linux GOARCH=arm go build \
-	     -o bin/kubectl/kubectl-hns_linux_arm \
-	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
-	     ./cmd/kubectl/main.go
-	GOOS=windows GOARCH=amd64 go build \
-	     -o bin/kubectl/kubectl-hns_windows_amd64.exe \
-	     -ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
-	    ./cmd/kubectl/main.go
+	#GOOS=linux GOARCH=arm go build \
+	     #-o bin/kubectl/kubectl-hns_linux_arm \
+	     #-ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
+	     #./cmd/kubectl/main.go
+	#GOOS=windows GOARCH=amd64 go build \
+	     #-o bin/kubectl/kubectl-hns_windows_amd64.exe \
+	     #-ldflags="-X sigs.k8s.io/hierarchical-namespaces/internal/version.Version=${HNC_IMG_TAG}" \
+	     #./cmd/kubectl/main.go
 
 # Clean all binaries (manager and kubectl)
 clean: krew-uninstall
@@ -129,7 +131,8 @@ clean: krew-uninstall
 
 # Installs the Linux kubectl plugin to $GOPATH/bin, assume that this is in your PATH already.
 kubectl: build
-	cp bin/kubectl/kubectl-hns_$(OS_NAME)_amd64 $(GOBIN)/kubectl-hns
+	#cp bin/kubectl/kubectl-hns_$(OS_NAME)_amd64 $(GOBIN)/kubectl-hns
+	cp bin/kubectl/kubectl-hns_$(OS_NAME)_arm64 $(GOBIN)/kubectl-hns
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: build
@@ -242,7 +245,7 @@ docker-build: generate fmt vet
 buildx-setup:
 	## This script needs to be run to start the emulator for multiarch builds
 	# This driver translates the instruction set to different platforms 
-	docker run --rm --privileged linuxkit/binfmt:v0.8
+	#docker run --rm --privileged linuxkit/binfmt:v0.8
 	docker buildx create --use --name=qemu
 	docker buildx inspect --bootstrap
 
@@ -252,7 +255,7 @@ docker-push-multi: buildx-setup generate fmt vet
 	@echo "Warning: this does not run tests. Run 'make test' to ensure tests are passing."
 	docker buildx build \
 	--push \
-	--platform linux/arm64,linux/amd64,linux/arm/v7  --tag ${HNC_IMG} .
+	--platform linux/arm64 --tag ${HNC_IMG} .
 
 ###################### KIND ACTIONS #########################
 
